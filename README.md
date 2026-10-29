@@ -14,7 +14,7 @@
 >
 > 正如 Qubes OS 的[安装安全性指南](https://doc.qubes-os.org/en/latest/user/downloading-installing-upgrading/install-security.html)所指出的：“如果你在一套已经失陷的硬件上安装操作系统，那么任何操作系统都帮不了你。”
 
-因此，在这篇文章里，我想和你聊聊我心目中针对高威胁模型的核心安全理念：**真正的安全，绝不是孤立的系统加固，而是一条从物理世界、硬件、固件直到操作系统的完整、可验证的信任链。**接下来，我将与你拆解这条信任链如何自底层逐级构建，并探讨在每一个关键环节上，高危用户应当践行的具体工程准则。
+因此，在这篇文章里，我想和你聊聊我心目中针对高威胁模型的核心安全理念：**真正的安全，绝不是孤立的系统加固，而是一条从物理世界、硬件、固件直到操作系统的完整、可验证的信任链。** 接下来，我将与你拆解这条信任链如何自底层逐级构建，并探讨在每一个关键环节上，高危用户应当践行的具体工程准则。
 
 ---
 
@@ -69,8 +69,10 @@
     > 因为只读开关是否真正由 U 盘主控在硬件层面强制执行，取决于具体实现。
 
 3.  **打破对单一分发基础设施的信任（Out-of-band Verification）**
+    
     只从官方网站下载公钥是危险的“单点失效”（Single Point of Failure）。如果网站基础设施或 CDN 遭到国家级入侵，攻击者完全可以同时替换 ISO 与公钥。
     高危用户必须掌握并践行[公钥指纹的带外交叉验证（Out-of-band Verification）](https://doc.qubes-os.org/en/latest/project-security/verifying-signatures.html#how-to-import-and-authenticate-the-qubes-master-signing-key)。简单来说，你需要：
+    
     *   在多个相互独立的平台上核对指纹（GitHub、Twitter/X、Bluesky、邮件列表、论坛、开发者个人社交媒体和博客等）；
     *   在非文本介质上寻找指纹印证（如会议演讲的 PDF、幻灯片、视频录像、甚至官方发行的 T-shirt 上）；
     *   向各大邮件列表与社区论坛公开征求第三方留存的历史指纹以供比对；
