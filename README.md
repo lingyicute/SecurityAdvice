@@ -160,14 +160,14 @@
     > 因此，我们需要用“物理防拆手段”来填补这最后一块拼图。Heads 革命性的架构价值恰恰在于此：**它把过去“必须物理保护整台计算机每一个部件”的近乎苛刻的要求，压缩到了“只需物理保护主板上一颗小芯片中一块永远不变的区域”**，而将其余所有的信任链全部交由密码学来验证。这才是让“物理保护”在工程实践中第一次变得切实可行的东西。
 
 #### 4. 理性审视 Intel ME（Ring -3）：隐式信任边界与攻击面收敛
-我们一路向下，从操作系统追到了 UEFI 与 SMM（Ring -2）。但如果你以为 SMM 就是这条链的尽头，那就太乐观了。在 Intel 平台上，**还有一层比 SMM 更深、更不透明、也更难摆脱的东西，在你按下电源键之前，它就已经醒着了。**它就是 **Intel ME（Management Engine，现称 CSME，Converged Security and Management Engine）**—— 一个集成在芯片组（PCH）中的独立协处理器（部分近年平台则集成在 SoC 内）。自 2006 年起，它便几乎成为了 Intel 平台的标配。它是 Intel AMT、Intel Boot Guard、PAVP、固件 TPM（PTT）等一系列“安全与管理特性”的硬件基础。为了提供这些特性，它必须拥有近乎**完整的系统访问权限**：
+我们一路向下，从操作系统追到了 UEFI 与 SMM（Ring -2）。但如果你以为 SMM 就是这条链的尽头，那就太乐观了。在 Intel 平台上，<strong>还有一层比 SMM 更深、更不透明、也更难摆脱的东西，在你按下电源键之前，它就已经醒着了。</strong>它就是 <strong>Intel ME（Management Engine，现称 CSME，Converged Security and Management Engine）</strong>—— 一个集成在芯片组（PCH）中的独立协处理器（部分近年平台则集成在 SoC 内）。自 2006 年起，它便几乎成为了 Intel 平台的标配。它是 Intel AMT、Intel Boot Guard、PAVP、固件 TPM（PTT）等一系列“安全与管理特性”的硬件基础。为了提供这些特性，它必须拥有近乎<strong>完整的系统访问权限</strong>：
 
 *   **自带 CPU、自带操作系统：** 最早的版本基于 ARCompact 架构。自第 6 代酷睿 Skylake / ME 11 起换装为 32 位 x86 架构的 Intel Quark 核心。其操作系统最初基于 ThreadX，后来跑的是[经过 Intel 修改的 MINIX](https://www.theregister.com/2017/11/20/intel_flags_firmware_flaws)；
 *   **先于主 CPU 启动，并且常驻：** 它负责平台初始化、电源管理，乃至于启动主处理器本身。只要主板通电，哪怕整机处于“关机”状态，ME 也可能仍在运行（[Black Hat EU 2017 的议题标题就叫《如何入侵一台已关机的电脑》](https://blackhat.com/docs/eu-17/materials/eu-17-Goryachy-How-To-Hack-A-Turned-Off-Computer-Or-Running-Unsigned-Code-In-Intel-Management-Engine.pdf)）。
 *   **能直接读写你的内存，也能触碰你的网络：** ME 可通过 DMA 访问主机内存；在支持 vPro/AMT 的机型上，它还带有内建的 Web 服务与 VNC 服务，通过 WSMAN 协议暴露近乎完整的平台控制权，其带外网络功能依赖主板上与芯片组直连的 Intel 网卡。在已配置 AMT 的场景下，相关流量可以在到达操作系统网络栈**之前**就被 ME 截获——这意味着你在操作系统里配置的任何软件防火墙都完全看不到它。
 *   **无法移除，也无法替换：** 从 Nehalem（ME 6）开始，ME 固件就[不能再被整体删除](https://github.com/corna/me_cleaner#what-can-be-done)：没有有效的 ME 固件，机器会在约 30 分钟后被强制关机。它的代码由 Intel 签名，因此无法替换或重新实现；在相当长的时间里，其模块还以未公开的霍夫曼码表压缩，直到 2017 年才被 Positive Technologies 的研究员[逆向还原](https://www.ptsecurity.com/ww-en/analytics/disabling-intel-me-11-via-undocumented-mode/)。
 
-然而，这一节无意渲染恐慌。**截至本文撰写之时，没有任何公开证据表明 Intel ME 中存在被蓄意植入的后门**，Intel 也[公开否认过](https://www.zdnet.com/article/researchers-say-intels-management-engine-feature-can-be-switched-off/)这种说法。在安全社区的讨论中，Intel ME 常被过度渲染为某种令人谈虎色变的“终极全能后门”，甚至由此衍生出一种宿命论式的技术虚无主义 —— 认为只要使用的是现代 Intel 处理器，一切固件加固与操作系统隔离都毫无意义。但这种过于骇人听闻的叙事不仅偏离了客观的工程事实，也模糊了威胁建模中至关重要的**信任边界**。
+然而，这一节无意渲染恐慌。**截至本文撰写之时，没有任何公开证据表明 Intel ME 中存在被蓄意植入的后门**，Intel 也[公开否认过](https://www.zdnet.com/article/researchers-say-intels-management-engine-feature-can-be-switched-off/)这种说法。在安全社区的讨论中，Intel ME 常被过度渲染为某种令人谈虎色变的“终极全能后门”，甚至由此衍生出一种宿命论式的技术虚无主义 —— 认为只要使用的是现代 Intel 处理器，一切固件加固与操作系统隔离都毫无意义。但在我看来，这种过于骇人听闻的叙事偏离了客观的工程事实，也模糊了威胁建模中至关重要的**信任边界**。
 
 回到信任链的第一性原理，我们首先需要坦诚面对一个基本前提：**当我们使用 Intel CPU 时，其实本就不得不在一定程度上隐式地信任 Intel。** 从硅片级的微架构逻辑电路、微码（Microcode）及其更新机制、硬件随机数生成器（RDRAND/RDSEED）、内存控制器，到后文借以实现硬件强隔离的 VT-x 与 VT-d（IOMMU），整个计算底座的物理执行均建立在芯片原厂的设计与制造之上。如果在威胁模型中先验地假设芯片原厂已经在硅片硬件层面对用户发起了背叛，那么在单机范畴内讨论任何软件或固件防御都将失去支点。
 
